@@ -45,7 +45,13 @@ namespace DnsTube
 				var response = Client.SendAsync(req).Result;
 				var result = response.Content.ReadAsStringAsync().Result;
 
-				ValidateCloudflareResult(response, result, "list zones");
+				var validationErrors = ValidateCloudflareResult(response, result, "list zones");
+
+				if (validationErrors.Any() || result.StartsWith("<"))
+				{
+					var msg = $"Error:\nResult: {result}\nValidation Errors: {string.Join("\n", validationErrors)}";
+					throw new Exception(msg);
+				}
 
 				var zoneListResponse = JsonSerializer.Deserialize<Zone.ListZonesResponse>(result);
 
@@ -78,7 +84,12 @@ namespace DnsTube
 				var response = Client.SendAsync(req).Result;
 				var result = response.Content.ReadAsStringAsync().Result;
 
-				ValidateCloudflareResult(response, result, "list DNS records");
+				var validationErrors = ValidateCloudflareResult(response, result, "list DNS records");
+				if (validationErrors.Any() || result.StartsWith("<"))
+				{
+					var msg = $"Error:\nResult: {result}\nValidation Errors: {string.Join("\n", validationErrors)}";
+					throw new Exception(msg);
+				}
 
 				var dnsRecordsResponse = JsonSerializer.Deserialize<DnsRecordsResponse>(result);
 
@@ -93,20 +104,20 @@ namespace DnsTube
 			return ret;
 		}
 
-		private void ValidateCloudflareResult(HttpResponseMessage response, string result, string action)
+		private List<string> ValidateCloudflareResult(HttpResponseMessage response, string result, string action)
 		{
+			var errors = new List<string>();
 			if (!response.IsSuccessStatusCode)
 			{
+				var cfError = JsonSerializer.Deserialize<CloudflareApiError>(result);
+				var msg = cfError.errors?.FirstOrDefault().message;
+				errors.Add(msg);
+
 				if (settings.IsUsingToken)
-				{
-					throw new Exception($"Unable to {action}. If you are updating all zones, token permissions should be similar to [All zones - Zone:Read, DNS:Edit]. If your token only has permissions for specific zones, click Settings and configure the Zone IDs with a comma-separated list.");
-				}
-				else
-				{
-					var cfError = JsonSerializer.Deserialize<CloudflareApiError>(result);
-					throw new Exception(cfError.errors?.FirstOrDefault().message);
-				}
+					errors.Add($"Unable to {action}. If you are updating all zones, token permissions should be similar to [All zones - Zone:Read, DNS:Edit]. If your token only has permissions for specific zones, click Settings and configure the Zone IDs with a comma-separated list.");
 			}
+
+			return errors;
 		}
 
 		// Ref: https://api.cloudflare.com/#dns-records-for-a-zone-update-dns-record
@@ -122,7 +133,12 @@ namespace DnsTube
 			response = Client.SendAsync(req).Result;
 			var result = response.Content.ReadAsStringAsync().Result;
 
-			ValidateCloudflareResult(response, result, $"update {protocol} DNS");
+			var validationErrors = ValidateCloudflareResult(response, result, $"update {protocol} DNS");
+			if (validationErrors.Any() || result.StartsWith("<"))
+			{
+				var msg = $"Error:\nResult: {result}\nValidation Errors: {string.Join("\n", validationErrors)}";
+				throw new Exception(msg);
+			}
 
 			var ret = JsonSerializer.Deserialize<DnsUpdateResponse>(result);
 			return ret;

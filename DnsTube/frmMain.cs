@@ -303,6 +303,8 @@ namespace DnsTube
 				AppendStatusTextThreadSafe($"Error fetching list: {e.Message}");
 				if (settings.IsUsingToken && e.Message.Contains("403 (Forbidden)"))
 					AppendStatusTextThreadSafe($"Make sure your token has Zone:Read permissions. See https://dash.cloudflare.com/profile/api-tokens to configure.");
+				if (e.Message.Contains("is an invalid start of a value"))
+					AppendStatusTextThreadSafe($"Make sure your token has Zone:Read permissions. See https://dash.cloudflare.com/profile/api-tokens to configure.");
 			}
 		}
 

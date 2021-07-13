@@ -23,6 +23,7 @@ namespace DnsTube
 				ProtocolSupport = settings.ProtocolSupport;
 				SkipCheckForNewReleases = settings.SkipCheckForNewReleases;
 				ZoneIDs = settings.ZoneIDs ?? "";
+				DebugLogging = settings.DebugLogging;
 			}
 			else
 			{
@@ -82,6 +83,7 @@ namespace DnsTube
 		public bool SkipCheckForNewReleases { get; set; }
 		public IpSupport ProtocolSupport { get; set; }
 		public string ZoneIDs { get; set; }
+		public bool DebugLogging { get; set; }
 	}
 
 	public enum IpSupport
