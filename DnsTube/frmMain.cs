@@ -219,7 +219,7 @@ namespace DnsTube
 
 		private bool validateSettings()
 		{
-			// check if settings are populate
+			// check if settings are populated
 			if (string.IsNullOrWhiteSpace(settings.EmailAddress)
 				|| !settings.EmailAddress.Contains("@")
 				|| (!settings.IsUsingToken && string.IsNullOrWhiteSpace(settings.ApiKey))

@@ -53,12 +53,19 @@ namespace DnsTube
 					throw new Exception(msg);
 				}
 
-				var zoneListResponse = JsonSerializer.Deserialize<Zone.ListZonesResponse>(result);
+				try
+				{
+					var zoneListResponse = JsonSerializer.Deserialize<Zone.ListZonesResponse>(result);
 
-				int totalRecords = zoneListResponse.result_info.total_count;
-				totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+					int totalRecords = zoneListResponse.result_info.total_count;
+					totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
 
-				ret.AddRange(zoneListResponse.result.Select(z => z.id));
+					ret.AddRange(zoneListResponse.result.Select(z => z.id));
+				}
+				catch (Exception e)
+				{
+					throw new Exception($"Error: \nMessage: {e.Message} \nResult: {result}");
+				}
 
 				pageNumber++;
 			} while (pageNumber <= totalPages);
@@ -91,12 +98,19 @@ namespace DnsTube
 					throw new Exception(msg);
 				}
 
-				var dnsRecordsResponse = JsonSerializer.Deserialize<DnsRecordsResponse>(result);
+				try
+				{
+					var dnsRecordsResponse = JsonSerializer.Deserialize<DnsRecordsResponse>(result);
 
-				int totalRecords = dnsRecordsResponse.result_info.total_count;
-				totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+					int totalRecords = dnsRecordsResponse.result_info.total_count;
+					totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
 
-				ret.AddRange(dnsRecordsResponse.result);
+					ret.AddRange(dnsRecordsResponse.result);
+				}
+				catch (Exception e)
+				{
+					throw new Exception($"Error: \nMessage: {e.Message} \nResult: {result}");
+				}
 
 				pageNumber++;
 			} while (pageNumber <= totalPages);
