@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
+using Serilog;
+
 namespace DnsTube
 {
 	public partial class frmMain : Form
@@ -14,10 +16,15 @@ namespace DnsTube
 		private CloudflareAPI cfClient;
 		private Settings settings;
 		private string RELEASE_TAG = "v0.8.1";
+		private Serilog.Core.Logger log;
 
 		public frmMain()
 		{
 			InitializeComponent();
+
+			log = new LoggerConfiguration()
+				.WriteTo.File("log.txt")
+				.CreateLogger();
 
 			settings = new Settings();
 		}
@@ -30,7 +37,7 @@ namespace DnsTube
 
 			PromptForSettings();
 
-			cfClient = new CloudflareAPI(httpClient, settings);
+			cfClient = new CloudflareAPI(httpClient, settings, log);
 
 			UpdateList();
 
@@ -234,7 +241,7 @@ namespace DnsTube
 		private string GetPublicIpAddress(IpSupport protocol)
 		{
 			string errorMesssage;
-			var publicIpAddress = Utility.GetPublicIpAddress(protocol, httpClient, out errorMesssage);
+			var publicIpAddress = Utility.GetPublicIpAddress(protocol, httpClient, out errorMesssage, log);
 
 			// Abort if we get an error, keeping the current address in settings
 			if (publicIpAddress == null)
@@ -264,7 +271,7 @@ namespace DnsTube
 
 			SetProtocolUiEnabled();
 
-			var release = Utility.GetLatestRelease();
+			var release = Utility.GetLatestRelease(log);
 			if (release != null && release.tag_name != RELEASE_TAG && !settings.SkipCheckForNewReleases)
 			{
 				if (MessageBox.Show($"A new version of DnsTube is available for download. \n\nClick Yes to view the latest release, or No to ignore.", "DnsTube Update Available", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
@@ -389,7 +396,7 @@ namespace DnsTube
 			SetProtocolUiEnabled();
 
 			// pick up new credentials if they were changed
-			cfClient = new CloudflareAPI(httpClient, settings);
+			cfClient = new CloudflareAPI(httpClient, settings, log);
 			// pick up new interval if it was changed
 			ScheduleUpdates();
 		}
@@ -423,6 +430,7 @@ namespace DnsTube
 		{
 			var execAssembly = System.Reflection.Assembly.GetExecutingAssembly();
 			var version = execAssembly.GetName().Version.ToString();
+			log.Information($"Version: {version}");
 			Text = $"DnsTube v{version}";
 			AppendStatusTextThreadSafe(Text);
 			if (File.Exists(settings.GetSettingsFilePath()))

@@ -15,4 +15,8 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<DefineConstants>$(PORTABLE)</DefineConstants>
 	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="Serilog" Version="2.10.1-dev-01343" />
+	  <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+	</ItemGroup>
 </Project>

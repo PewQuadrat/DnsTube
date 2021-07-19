@@ -8,7 +8,7 @@ namespace DnsTube
 {
 	public class Utility
 	{
-		public static string GetPublicIpAddress(IpSupport protocol, HttpClient Client, out string errorMesssage)
+		public static string GetPublicIpAddress(IpSupport protocol, HttpClient Client, out string errorMesssage, Serilog.Core.Logger log)
 		{
 			string publicIpAddress = null;
 			var maxAttempts = 3;
@@ -22,6 +22,7 @@ namespace DnsTube
 				{
 					attempts++;
 					var response = Client.GetStringAsync(url).Result;
+					log.Information($"GetPublicIpAddress response: {response}");
 					var candidatePublicIpAddress = response.Replace("\n", "");
 
 					if (!IsValidIpAddress(protocol, candidatePublicIpAddress))
@@ -38,7 +39,7 @@ namespace DnsTube
 			return publicIpAddress;
 		}
 
-		public static GithubRelease GetLatestRelease()
+		public static GithubRelease GetLatestRelease(Serilog.Core.Logger log)
 		{
 			var url = "https://api.github.com/repos/drittich/DnsTube/releases/latest";
 
@@ -49,6 +50,7 @@ namespace DnsTube
 					client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 					client.DefaultRequestHeaders.UserAgent.TryParseAdd("request");
 					var response = client.GetStringAsync(url).Result;
+					log.Information($"GetLatestRelease response: {response}");
 					release = JsonSerializer.Deserialize<GithubRelease>(response);
 				}
 				catch { }

@@ -13,15 +13,17 @@ namespace DnsTube
 	public class CloudflareAPI
 	{
 		private Settings settings;
+		private Serilog.Core.Logger log;
 		public static string EndPoint = "https://api.cloudflare.com/client/v4/";
 		public HttpClient Client { get; set; }
 
-		public CloudflareAPI(HttpClient client, Settings settings)
+		public CloudflareAPI(HttpClient client, Settings settings, Serilog.Core.Logger log)
 		{
 			Client = client;
 			if (Client.BaseAddress == null)
 				Client.BaseAddress = new Uri(EndPoint);
 			this.settings = settings;
+			this.log = log;
 		}
 
 		/// <summary>
@@ -44,8 +46,10 @@ namespace DnsTube
 
 				var response = Client.SendAsync(req).Result;
 				var result = response.Content.ReadAsStringAsync().Result;
+				log.Information($"ListZoneIDs result: {result}");
 
 				var validationErrors = ValidateCloudflareResult(response, result, "list zones");
+				log.Information($"ListZoneIDs validationErrors: {JsonSerializer.Serialize(validationErrors)}");
 
 				if (validationErrors.Any() || result.StartsWith("<"))
 				{
@@ -90,8 +94,11 @@ namespace DnsTube
 
 				var response = Client.SendAsync(req).Result;
 				var result = response.Content.ReadAsStringAsync().Result;
+				log.Information($"GetRecordsByType result: {result}");
 
 				var validationErrors = ValidateCloudflareResult(response, result, "list DNS records");
+				log.Information($"GetRecordsByType validationErrors: {JsonSerializer.Serialize(validationErrors)}");
+
 				if (validationErrors.Any() || result.StartsWith("<"))
 				{
 					var msg = $"Error:\nResult: {result}\nValidation Errors: {string.Join("\n", validationErrors)}";
@@ -146,8 +153,11 @@ namespace DnsTube
 
 			response = Client.SendAsync(req).Result;
 			var result = response.Content.ReadAsStringAsync().Result;
+			log.Information($"UpdateDns result: {result}");
 
 			var validationErrors = ValidateCloudflareResult(response, result, $"update {protocol} DNS");
+			log.Information($"UpdateDns validationErrors: {JsonSerializer.Serialize(validationErrors)}");
+
 			if (validationErrors.Any() || result.StartsWith("<"))
 			{
 				var msg = $"Error:\nResult: {result}\nValidation Errors: {string.Join("\n", validationErrors)}";
